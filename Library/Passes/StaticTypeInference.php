@@ -171,7 +171,7 @@ class StaticTypeInference
                 break;
 
             default:
-                echo 'StaticTypeInference=', $currentType, ' ', $type, PHP_EOL;
+//                echo 'StaticTypeInference=', $currentType, ' ', $type, PHP_EOL;
                 break;
         }
     }
