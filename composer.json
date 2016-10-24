@@ -1,5 +1,5 @@
 {
-    "name": "phalcon/zephir",
+    "name": "izmanw/zephir",
     "description": "Zephir is a compiled high level language aimed to the creation of C-extensions for PHP",
     "keywords": ["extension"],
     "homepage": "http://zephir-lang.com/",
