@@ -42,26 +42,74 @@ class Bootstrap
      */
     protected static function showException(\Exception $e, Config $config = null)
     {
-        echo get_class($e), ': ', $e->getMessage(), PHP_EOL;
+        $red = function ($line) {
+            if (php_sapi_name() === 'cli' || (is_numeric($_SERVER['argc']) && $_SERVER['argc'] > 0)) {
+                $line = str_replace("'", "'\"'\"'", $line);
+                $line = '\033[31m' . $line . '\033[0m';
+                $line = `echo -n '$line'`;
+            }
+            return $line;
+        };
+
+        $open = function ($file, $line) {
+            exec("which pstorm", $output, $return);
+            if ($return == 0) {
+                $arg = escapeshellarg($file . ':' . $line);
+                `pstorm $arg`;
+            }
+        };
+
+        $traceLine = true;
+        $output = get_class($e) . ': ' . $red($e->getMessage());
+
         if (method_exists($e, 'getExtra')) {
             $extra = $e->getExtra();
             if (is_array($extra)) {
                 if (isset($extra['file'])) {
-                    echo PHP_EOL;
                     $lines = file($extra['file']);
                     if (isset($lines[$extra['line'] - 1])) {
                         $line = $lines[$extra['line'] - 1];
-                        echo "\t", str_replace("\t", " ", $line);
+                        if (preg_match('~^(.*?)\sin\s(/[a-z0-9-._/]+\.zep)\son\sline\s([0-9]+)$~isxSX', trim($e->getMessage()), $match)) {
+                            $traceLine = false;
+                            $output =  $red($match[1]) . "\n";
+                            $output .= 'in ' . $match[2] . ' on line ' . $match[3] . "\n";
+                            $open($match[2], $match[3]);
+                        }
+                        $output .= PHP_EOL;
+                        $line = $red($line);
+                        $output .= /*"\t",*/ str_replace("\t", " ", $line);
                         if (($extra['char'] - 1) > 0) {
-                            echo "\t", str_repeat("-", $extra['char'] - 1), "^", PHP_EOL;
+                            $output .= /*"\t",*/ str_repeat("-", $extra['char'] - 1) . "^";
                         }
                     }
                 }
             }
         }
-        echo PHP_EOL;
 
-        if ($config && $config->get('verbose')) {
+        echo $output, PHP_EOL;
+
+        if ($traceLine) {
+            foreach ($e->getTrace() as $trace) {
+                if (!empty($trace['args']) && is_array($trace['args'])) {
+                    foreach ($trace['args'] as $arg) {
+                        if (is_object($arg) && method_exists($arg, 'getExpression')) {
+                            $expr = $arg->getExpression();
+                            if (is_array($expr) && isset($expr['parameters']) && is_array($expr['parameters'])) {
+                                foreach ($expr['parameters'] as $param) {
+                                    if (is_array($param) && isset($param['file']) && isset($param['line'])) {
+                                        echo ' in ' . $param['file'] . ' on line ' . $param['line'], PHP_EOL;
+                                        $open($param['file'], $param['line']);
+                                        break 3;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (($config && $config->get('verbose'))) {
             echo 'at ', str_replace(ZEPHIRPATH, '', $e->getFile()), '(', $e->getLine(), ')', PHP_EOL;
             echo str_replace(ZEPHIRPATH, '', $e->getTraceAsString()), PHP_EOL;
         }
