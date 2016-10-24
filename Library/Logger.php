@@ -75,13 +75,18 @@ class Logger
                 return false;
             }
 
+            if (!$this->handler) {
+                $this->handler = STDERR;
+            }
+
             $warning  = 'Warning: ' . $message;
+            $warning = Color::warning($warning);
             if (!isset($node['file'])) {
                 $warning .= ' in unknown on 0';
             } else {
-                $warning .= ' in ' . $node['file'] . ' on ' . $node['line'];
+                $warning .= ' in ' . $node['file'] . ' on line ' . $node['line'];
             }
-            $warning .= ' [' . $type . ']' . PHP_EOL;
+            $warning .= PHP_EOL . ' [' . $type . ']' . PHP_EOL;
             $warning .= PHP_EOL;
             if (isset($node['file'])) {
                 if (!isset($_files[$node['file']])) {
@@ -104,11 +109,7 @@ class Logger
                 $warning .= PHP_EOL;
             }
 
-            if (!$this->handler) {
-                $this->handler = STDERR;
-            }
-
-            fprintf($this->handler, "%s", Color::warning($warning));
+            fprintf($this->handler, "%s", $warning);
 
             return true;
         }
