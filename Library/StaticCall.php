@@ -540,11 +540,11 @@ class StaticCall extends Call
                     if ($compiler->isClass($className)) {
                         $classDefinition = $compiler->getClassDefinition($className);
                     } else {
-                        if ($compiler->isBundledClass($className)) {
+//                        if ($compiler->isBundledClass($className)) {
                             $classDefinition = $compiler->getInternalClassDefinition($className);
-                        } else {
-                            throw new CompilerException("Class name: " . $className . " does not exist", $expression);
-                        }
+//                        } else {
+//                            throw new CompilerException("Class name: " . $className . " does not exist", $expression);
+//                        }
                     }
                 } else {
                     foreach ($className as $singleClass) {
