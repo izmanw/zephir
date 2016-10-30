@@ -1958,6 +1958,54 @@ class ClassMethod
             }
         }
 
+        $debug = in_array('--debug', $_SERVER['argv']);
+        $exclude = in_array('--exclude', $_SERVER['argv']);
+
+        static $methods;
+
+        if ($debug && !isset($methods)) {
+            $methods = file_get_contents('/home/data/projects/phalcon/zephir/debug.txt');
+            $methods = preg_split('/\s+/', $methods);
+            $methods = array_unique($methods);
+            $tmp = [];
+            foreach ($methods as $item) {
+                if (!empty($item)) {
+                    $tmp[] = trim($item);
+                }
+            }
+            $methods = $tmp;
+        }
+
+        global $__method;
+        global $_internal;
+
+        if ($debug && $_internal) {
+            $exists = in_array($__method, $methods);
+            if ((!$exclude && !$exists) || ($exclude && $exists)) {
+                $codePrinter->preOutput("\t" . 'RETURN_MM_NULL();');
+                $codePrinter->preOutput("\t" . 'zephir_exit_empty();');
+                $codePrinter->preOutput("\t" . 'ZEPHIR_MM_RESTORE();');
+                $codePrinter->preOutput("\t" . 'zend_print_zval(temp_string_ns_method, 0);');
+//                $codePrinter->preOutput("\t" . 'ZEPHIR_CONCAT_SV(temp_string_ns_method, "' . $__method . '", "()");');
+//                $codePrinter->preOutput("\t" . 'ZVAL_STRING(temp_string_ns_method, "' . $__method . '() // ' . $counter . '\n", 1);');
+//                $codePrinter->preOutput("\t" . 'ZVAL_STRING(temp_string_ns_method, "\n{{~~!!\$\$##}}' . $counter . '", 1);');
+                $codePrinter->preOutput("\t" . 'ZVAL_STRING(temp_string_ns_method, "<!--\n{{~~!!\$\$##}}' . str_replace('\\',
+                        '\\\\', $__method) . '\n-->", 1);');
+                $codePrinter->preOutput("\t" . 'ZEPHIR_INIT_VAR(temp_string_ns_method);');
+                if (!$symbolTable->getMustGrownStack()) {
+                    $compilationContext->headersManager->add('kernel/memory');
+                    $codePrinter->preOutput("\t" . 'ZEPHIR_MM_GROW();');
+                }
+            }
+        }
+        /*
+            ZEPHIR_INIT_VAR(qwerty);
+            ZVAL_STRING(qwerty, "namespace", 1);
+            zend_print_zval(qwerty, 0);
+            ZEPHIR_MM_RESTORE();
+            zephir_exit_empty();
+        */
+
         /**
          * Grow the stack if needed
          */
