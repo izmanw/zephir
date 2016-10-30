@@ -91,3 +91,4 @@ parser/parser/parser.php5.out
 parser/parser/parser.php7.out
 parser/run-tests.php
 parser/zephir_parser.so
+/debug.txt
