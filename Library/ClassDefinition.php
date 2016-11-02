@@ -559,22 +559,22 @@ class ClassDefinition
                 }
                 $className = strtolower($extendsClassDefinition->getNamespace() . "\\". $extendsClassDefinition->getName());
 
-                if ($className == 'phalcon\di\injectable') {
-                    $injectable = [
-                        'config',
-                        'router',
-                        'request',
-                        'cache',
-                        'response',
-                        'oauth2server',
-                        'view',
-                        'db',
-                        'di'
-                    ];
-                    if (in_array($name, $injectable)) {
-                        return true;
-                    }
-                }
+//                if ($className == 'phalcon\di\injectable') {
+//                    $injectable = [
+//                        'config',
+//                        'router',
+//                        'request',
+//                        'cache',
+//                        'response',
+//                        'oauth2server',
+//                        'view',
+//                        'db',
+//                        'di'
+//                    ];
+//                    if (in_array($name, $injectable)) {
+//                        return true;
+//                    }
+//                }
 
                 if ($className == 'phalcon\mvc\model') {
                     $properties = [
@@ -1257,11 +1257,15 @@ class ClassDefinition
             if ($this->getType() == 'class') {
                 if (!$method->isInternal()) {
                     $codePrinter->output('PHP_METHOD(' . $this->getCNamespace() . '_' . $this->getName() . ', ' . $method->getName() . ') {');
-                    $codePrinter->output('	zval *temp_string_ns_method = NULL;');
-                    global $_internal;
-                    $_internal = true;
-                    global $__method;
-                    $__method = $this->getNamespace()  . '\\' . $this->getName() . '::' . $method->getName();
+                    $exclude = in_array('--debug-exclude', $_SERVER['argv']);
+                    $debug = $exclude || in_array('--debug', $_SERVER['argv']);
+                    if ($debug) {
+                        $codePrinter->output('	zval *temp_string_ns_method = NULL;');
+                        global $_internal;
+                        $_internal = true;
+                        global $__method;
+                        $__method = $this->getNamespace() . '\\' . $this->getName() . '::' . $method->getName();
+                    }
                 } else {
                     global $_internal;
                     $_internal = false;
