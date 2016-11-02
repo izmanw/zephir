@@ -1958,8 +1958,8 @@ class ClassMethod
             }
         }
 
-        $debug = in_array('--debug', $_SERVER['argv']);
-        $exclude = in_array('--exclude', $_SERVER['argv']);
+        $exclude = in_array('--debug-exclude', $_SERVER['argv']);
+        $debug = $exclude || in_array('--debug', $_SERVER['argv']);
 
         static $methods;
 
