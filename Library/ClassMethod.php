@@ -1959,7 +1959,8 @@ class ClassMethod
         }
 
         $exclude = in_array('--debug-exclude', $_SERVER['argv']);
-        $debug = $exclude || in_array('--debug', $_SERVER['argv']);
+        $print = in_array('--debug-print', $_SERVER['argv']);
+        $debug = $exclude || $print || in_array('--debug', $_SERVER['argv']);
 
         static $methods;
 
@@ -1981,10 +1982,24 @@ class ClassMethod
 
         if ($debug && $_internal) {
             $exists = in_array($__method, $methods);
-            if ((!$exclude && !$exists) || ($exclude && $exists)) {
-                $codePrinter->preOutput("\t" . 'RETURN_MM_NULL();');
-                $codePrinter->preOutput("\t" . 'zephir_exit_empty();');
-                $codePrinter->preOutput("\t" . 'ZEPHIR_MM_RESTORE();');
+            $xor = $exclude || $print;
+            if (!$exists && $xor) {
+                if (substr($__method, -2) == '::') {
+                    $exists = preg_match('/^' . preg_quote($__method, '/') . '/', $__method);
+                }
+            }
+            if ((!$xor && !$exists) || ($xor && $exists)) {
+                $mm = !$symbolTable->getMustGrownStack();
+                if (!$print) {
+                    $codePrinter->preOutput("\t" . 'RETURN_MM_NULL();');
+                    $codePrinter->preOutput("\t" . 'zephir_exit_empty();');
+                    $codePrinter->preOutput("\t" . 'ZEPHIR_MM_RESTORE();');
+                } else {
+                    if ($mm) {
+                        $codePrinter->preOutput("\t" . 'RETURN_MM_NULL();');
+                        $codePrinter->preOutput("\t" . 'ZEPHIR_MM_RESTORE();');
+                    }
+                }
                 $codePrinter->preOutput("\t" . 'zend_print_zval(temp_string_ns_method, 0);');
 //                $codePrinter->preOutput("\t" . 'ZEPHIR_CONCAT_SV(temp_string_ns_method, "' . $__method . '", "()");');
 //                $codePrinter->preOutput("\t" . 'ZVAL_STRING(temp_string_ns_method, "' . $__method . '() // ' . $counter . '\n", 1);');
@@ -1992,7 +2007,7 @@ class ClassMethod
                 $codePrinter->preOutput("\t" . 'ZVAL_STRING(temp_string_ns_method, "<!--\n{{~~!!\$\$##}}' . str_replace('\\',
                         '\\\\', $__method) . '\n-->", 1);');
                 $codePrinter->preOutput("\t" . 'ZEPHIR_INIT_VAR(temp_string_ns_method);');
-                if (!$symbolTable->getMustGrownStack()) {
+                if ($mm) {
                     $compilationContext->headersManager->add('kernel/memory');
                     $codePrinter->preOutput("\t" . 'ZEPHIR_MM_GROW();');
                 }

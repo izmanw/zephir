@@ -1258,7 +1258,8 @@ class ClassDefinition
                 if (!$method->isInternal()) {
                     $codePrinter->output('PHP_METHOD(' . $this->getCNamespace() . '_' . $this->getName() . ', ' . $method->getName() . ') {');
                     $exclude = in_array('--debug-exclude', $_SERVER['argv']);
-                    $debug = $exclude || in_array('--debug', $_SERVER['argv']);
+                    $print = in_array('--debug-print', $_SERVER['argv']);
+                    $debug = $exclude || $print || in_array('--debug', $_SERVER['argv']);
                     if ($debug) {
                         $codePrinter->output('	zval *temp_string_ns_method = NULL;');
                         global $_internal;
